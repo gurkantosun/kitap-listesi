@@ -1,0 +1,728 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kitaplık — Okuma Günlüğüm</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,500&family=Source+Serif+4:opsz,wght@8..60,400;8..60,500;8..60,600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#121109;
+    --panel:#1b1912;
+    --panel-2:#221f16;
+    --parchment:#ece3cf;
+    --muted:#a89d84;
+    --brass:#c7963e;
+    --brass-soft:#e0b866;
+    --burgundy:#9a3f3f;
+    --sage:#7c8b6f;
+    --rule: rgba(236,227,207,0.13);
+    --rule-strong: rgba(236,227,207,0.22);
+    --shadow: 0 20px 50px rgba(0,0,0,0.45);
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0;
+    background:
+      radial-gradient(ellipse 900px 500px at 15% -10%, rgba(199,150,62,0.08), transparent 60%),
+      radial-gradient(ellipse 700px 600px at 100% 10%, rgba(122,139,111,0.06), transparent 55%),
+      var(--ink);
+    color:var(--parchment);
+    font-family:'Source Serif 4', Georgia, serif;
+    -webkit-font-smoothing:antialiased;
+    min-height:100vh;
+  }
+  ::selection{ background:var(--brass); color:#141208; }
+
+  .wrap{ max-width:1120px; margin:0 auto; padding:0 28px; }
+
+  /* ---------- Header ---------- */
+  header.hero{ padding:56px 0 34px; }
+  .eyebrow{
+    font-family:'JetBrains Mono', monospace;
+    letter-spacing:.22em;
+    text-transform:uppercase;
+    font-size:11.5px;
+    color:var(--brass-soft);
+    display:flex; align-items:center; gap:10px;
+  }
+  .eyebrow::before{ content:""; width:22px; height:1px; background:var(--brass-soft); display:inline-block; }
+  h1.title{
+    font-family:'Fraunces', serif;
+    font-weight:600;
+    font-size:clamp(42px, 7vw, 74px);
+    line-height:0.98;
+    margin:14px 0 6px;
+    letter-spacing:-0.01em;
+  }
+  h1.title em{ font-style:italic; font-weight:500; color:var(--brass-soft); }
+  .subtitle{ color:var(--muted); font-size:16.5px; max-width:520px; line-height:1.55; margin:0 0 30px; }
+
+  .stats-strip{
+    display:grid;
+    grid-template-columns:repeat(5,1fr);
+    border:1px solid var(--rule-strong);
+    border-radius:14px;
+    background:linear-gradient(180deg, var(--panel), var(--panel-2));
+    box-shadow:var(--shadow);
+    overflow:hidden;
+  }
+  .stat{ padding:22px 10px; text-align:center; border-right:1px solid var(--rule); }
+  .stat:last-child{ border-right:none; }
+  .stat b{
+    display:block; font-family:'JetBrains Mono', monospace; font-weight:600;
+    font-size:clamp(22px,3vw,30px); color:var(--parchment);
+  }
+  .stat span{ font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); }
+
+  /* ---------- Section shell ---------- */
+  section{ padding:46px 0; }
+  .section-head{
+    display:flex; align-items:baseline; justify-content:space-between; gap:16px;
+    margin-bottom:20px; padding-bottom:14px; border-bottom:1px solid var(--rule);
+  }
+  .section-head h2{
+    font-family:'JetBrains Mono', monospace; font-size:12.5px;
+    letter-spacing:.18em; text-transform:uppercase; color:var(--brass-soft); margin:0; font-weight:600;
+  }
+  .section-head .count{ color:var(--muted); font-size:12px; font-family:'JetBrains Mono',monospace; }
+  .link-btn{
+    background:none; border:none; color:var(--muted); cursor:pointer;
+    font-family:'JetBrains Mono', monospace; font-size:12px; letter-spacing:.05em;
+    text-decoration:underline; text-underline-offset:3px; padding:0;
+  }
+  .link-btn:hover{ color:var(--brass-soft); }
+
+  /* ---------- Horizontal shelf (favorites / reading) ---------- */
+  .shelf{ display:flex; gap:16px; overflow-x:auto; padding:4px 4px 14px; scrollbar-width:thin; }
+  .shelf::-webkit-scrollbar{ height:6px; }
+  .shelf::-webkit-scrollbar-thumb{ background:var(--rule-strong); border-radius:4px; }
+
+  .spine{
+    position:relative; flex:0 0 auto; width:140px; height:210px;
+    border-radius:6px; overflow:hidden; cursor:pointer;
+    border:1px solid var(--rule-strong);
+    box-shadow:0 10px 24px rgba(0,0,0,0.4);
+    transition:transform .18s ease, box-shadow .18s ease;
+    background-size:cover; background-position:center;
+    display:flex; align-items:flex-end;
+  }
+  .spine:hover{ transform:translateY(-5px) rotate(-0.4deg); box-shadow:0 16px 30px rgba(0,0,0,0.5); }
+  .spine .fallback-title{
+    font-family:'Fraunces',serif; font-weight:600; font-size:16px; line-height:1.15;
+    padding:14px 12px; color:rgba(255,255,255,0.94); text-shadow:0 2px 8px rgba(0,0,0,.5);
+  }
+  .spine .fallback-author{
+    position:absolute; top:12px; left:12px; right:12px; font-family:'JetBrains Mono',monospace;
+    font-size:9.5px; letter-spacing:.08em; text-transform:uppercase; color:rgba(255,255,255,0.7);
+  }
+  .fav-badge{
+    position:absolute; top:8px; right:8px; width:22px; height:22px; border-radius:50%;
+    background:rgba(18,17,9,0.65); backdrop-filter:blur(2px); display:flex; align-items:center; justify-content:center;
+    font-size:12px; color:var(--brass-soft);
+  }
+
+  /* ---------- Reading now card ---------- */
+  .reading-card{
+    display:flex; gap:20px; background:linear-gradient(135deg, var(--panel), var(--panel-2));
+    border:1px solid var(--rule-strong); border-radius:14px; padding:18px; align-items:center;
+    cursor:pointer; box-shadow:var(--shadow);
+  }
+  .reading-card .cov{ width:70px; height:104px; border-radius:5px; flex:0 0 auto; background-size:cover; background-position:center; border:1px solid var(--rule-strong); }
+  .reading-card .info b{ font-family:'Fraunces',serif; font-size:19px; font-weight:600; display:block; }
+  .reading-card .info .auth{ color:var(--muted); font-size:13.5px; margin-top:2px; }
+  .stamp{
+    font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:.12em; text-transform:uppercase;
+    border:1.5px solid; padding:3px 9px; border-radius:3px; display:inline-block; margin-top:10px;
+    transform:rotate(-2deg);
+  }
+  .stamp.reading{ color:var(--burgundy); border-color:var(--burgundy); }
+  .stamp.read{ color:var(--sage); border-color:var(--sage); }
+  .stamp.toread{ color:var(--brass-soft); border-color:var(--brass-soft); }
+
+  /* ---------- Toolbar ---------- */
+  .toolbar{ display:flex; flex-wrap:wrap; gap:10px; align-items:center; justify-content:space-between; margin-bottom:22px; }
+  .tabs{ display:flex; gap:6px; flex-wrap:wrap; }
+  .tab{
+    font-family:'JetBrains Mono',monospace; font-size:11.5px; letter-spacing:.06em; text-transform:uppercase;
+    background:transparent; border:1px solid var(--rule-strong); color:var(--muted);
+    padding:8px 14px; border-radius:20px; cursor:pointer; transition:all .15s ease;
+  }
+  .tab.active{ background:var(--brass); border-color:var(--brass); color:#161307; font-weight:600; }
+  .tab:hover:not(.active){ border-color:var(--brass-soft); color:var(--parchment); }
+  .search-add{ display:flex; gap:10px; }
+  input[type=text].search{
+    background:var(--panel); border:1px solid var(--rule-strong); border-radius:20px; padding:8px 16px;
+    color:var(--parchment); font-family:'Source Serif 4', serif; font-size:14px; width:190px;
+  }
+  input.search::placeholder{ color:var(--muted); }
+  .btn-primary{
+    background:var(--brass); color:#161307; border:none; border-radius:20px; padding:9px 18px;
+    font-family:'JetBrains Mono',monospace; font-size:12px; letter-spacing:.05em; font-weight:600;
+    cursor:pointer; white-space:nowrap; transition:transform .12s ease, background .15s ease;
+  }
+  .btn-primary:hover{ background:var(--brass-soft); transform:translateY(-1px); }
+
+  /* ---------- Book grid ---------- */
+  .grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:20px; }
+  .book-card{ cursor:pointer; }
+  .book-cover{
+    width:100%; aspect-ratio:2/3; border-radius:7px; background-size:cover; background-position:center;
+    border:1px solid var(--rule-strong); box-shadow:0 10px 22px rgba(0,0,0,0.4);
+    display:flex; align-items:flex-end; position:relative; overflow:hidden;
+    transition:transform .16s ease;
+  }
+  .book-card:hover .book-cover{ transform:translateY(-4px); }
+  .book-cover .fallback-title{ font-family:'Fraunces',serif; font-weight:600; font-size:15px; line-height:1.15; padding:12px 10px; color:rgba(255,255,255,0.94); text-shadow:0 2px 8px rgba(0,0,0,.5); }
+  .book-cover .fallback-author{ position:absolute; top:10px; left:10px; right:10px; font-family:'JetBrains Mono',monospace; font-size:9px; letter-spacing:.08em; text-transform:uppercase; color:rgba(255,255,255,0.72); }
+  .book-meta{ padding-top:9px; }
+  .book-meta .t{ font-family:'Fraunces',serif; font-weight:600; font-size:14.5px; line-height:1.2; }
+  .book-meta .a{ color:var(--muted); font-size:12px; margin-top:2px; }
+  .stars{ margin-top:5px; font-size:12px; letter-spacing:1px; color:var(--brass-soft); }
+  .stars .off{ color:var(--rule-strong); }
+  .status-dot{ display:inline-block; width:6px; height:6px; border-radius:50%; margin-right:5px; }
+  .status-dot.reading{ background:var(--burgundy); }
+  .status-dot.read{ background:var(--sage); }
+  .status-dot.toread{ background:var(--brass-soft); }
+
+  .empty-state{
+    border:1px dashed var(--rule-strong); border-radius:14px; padding:56px 20px; text-align:center; color:var(--muted);
+  }
+  .empty-state .big{ font-family:'Fraunces',serif; font-size:22px; color:var(--parchment); margin-bottom:8px; font-style:italic; }
+
+  /* ---------- Histogram ---------- */
+  .hist-box{
+    background:linear-gradient(180deg, var(--panel), var(--panel-2)); border:1px solid var(--rule-strong);
+    border-radius:14px; padding:26px 26px 18px; box-shadow:var(--shadow);
+  }
+  .hist-head{ display:flex; justify-content:space-between; align-items:baseline; margin-bottom:22px; }
+  .hist-head h3{ font-family:'JetBrains Mono',monospace; font-size:12px; letter-spacing:.15em; text-transform:uppercase; color:var(--muted); margin:0; font-weight:500; }
+  .hist-head b{ font-family:'JetBrains Mono',monospace; font-size:20px; }
+  .hist-bars{ display:flex; align-items:flex-end; gap:10px; height:130px; }
+  .hist-col{ flex:1; display:flex; flex-direction:column; align-items:center; justify-content:flex-end; height:100%; }
+  .hist-bar{ width:100%; max-width:44px; background:linear-gradient(180deg, var(--brass-soft), var(--brass)); border-radius:5px 5px 2px 2px; min-height:3px; transition:height .4s ease; }
+  .hist-labels{ display:flex; gap:10px; margin-top:10px; }
+  .hist-labels span{ flex:1; text-align:center; font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--muted); }
+
+  footer{ padding:40px 0 60px; text-align:center; color:var(--muted); font-size:12px; font-family:'JetBrains Mono',monospace; letter-spacing:.05em; }
+
+  /* ---------- Modal ---------- */
+  .overlay{
+    position:fixed; inset:0; background:rgba(10,9,5,0.72); backdrop-filter:blur(3px);
+    display:none; align-items:flex-start; justify-content:center; z-index:50; padding:40px 20px; overflow-y:auto;
+  }
+  .overlay.open{ display:flex; }
+  .modal{
+    background:linear-gradient(180deg, var(--panel), var(--panel-2)); border:1px solid var(--rule-strong);
+    border-radius:16px; width:100%; max-width:640px; box-shadow:0 30px 70px rgba(0,0,0,0.6);
+    animation:pop .18s ease;
+  }
+  @keyframes pop{ from{ opacity:0; transform:translateY(10px) scale(.98);} to{opacity:1; transform:none;} }
+  .modal-head{ display:flex; justify-content:space-between; align-items:center; padding:20px 24px; border-bottom:1px solid var(--rule); }
+  .modal-head h3{ font-family:'Fraunces',serif; font-size:20px; margin:0; font-weight:600; }
+  .modal-close{ background:none; border:none; color:var(--muted); font-size:20px; cursor:pointer; line-height:1; padding:4px; }
+  .modal-close:hover{ color:var(--parchment); }
+  .modal-body{ padding:22px 24px 26px; display:flex; flex-direction:column; gap:16px; }
+  .row2{ display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+  label{ font-family:'JetBrains Mono',monospace; font-size:10.5px; letter-spacing:.1em; text-transform:uppercase; color:var(--muted); margin-bottom:6px; display:block; }
+  input[type=text], input[type=url], input[type=number], input[type=date], textarea, select{
+    width:100%; background:rgba(0,0,0,0.25); border:1px solid var(--rule-strong); border-radius:8px;
+    padding:10px 12px; color:var(--parchment); font-family:'Source Serif 4', serif; font-size:14.5px;
+  }
+  textarea{ resize:vertical; min-height:70px; font-family:'Source Serif 4', serif; }
+  select{ font-family:'Source Serif 4', serif; appearance:none; background-image:linear-gradient(45deg, transparent 50%, var(--muted) 50%), linear-gradient(135deg, var(--muted) 50%, transparent 50%); background-position:calc(100% - 18px) center, calc(100% - 13px) center; background-size:5px 5px, 5px 5px; background-repeat:no-repeat; }
+  input:focus, textarea:focus, select:focus{ outline:none; border-color:var(--brass); }
+
+  .star-picker{ display:flex; gap:6px; font-size:26px; }
+  .star-picker span{ cursor:pointer; color:var(--rule-strong); transition:color .1s; }
+  .star-picker span.filled{ color:var(--brass-soft); }
+
+  .fav-toggle{ display:flex; align-items:center; gap:8px; cursor:pointer; user-select:none; }
+  .fav-toggle input{ width:auto; }
+
+  .quotes-list{ display:flex; flex-direction:column; gap:8px; }
+  .quote-item{
+    display:flex; gap:8px; align-items:flex-start; background:rgba(0,0,0,0.22); border-left:2px solid var(--brass);
+    border-radius:4px; padding:9px 12px; font-style:italic; font-size:13.5px; line-height:1.5;
+  }
+  .quote-item .qtext{ flex:1; }
+  .quote-item button{ background:none; border:none; color:var(--muted); cursor:pointer; font-family:'JetBrains Mono',monospace; font-size:11px; }
+  .quote-item button:hover{ color:var(--burgundy); }
+  .quote-add{ display:flex; gap:8px; }
+  .quote-add input{ flex:1; }
+  .btn-ghost{ background:transparent; border:1px solid var(--rule-strong); color:var(--parchment); border-radius:8px; padding:9px 14px; font-family:'JetBrains Mono',monospace; font-size:12px; cursor:pointer; }
+  .btn-ghost:hover{ border-color:var(--brass-soft); color:var(--brass-soft); }
+
+  .modal-footer{ display:flex; justify-content:space-between; align-items:center; padding-top:6px; border-top:1px solid var(--rule); padding-top:16px; }
+  .btn-danger{ background:none; border:none; color:var(--burgundy); font-family:'JetBrains Mono',monospace; font-size:12px; cursor:pointer; letter-spacing:.04em; }
+  .btn-danger:hover{ text-decoration:underline; }
+  .footer-right{ display:flex; gap:10px; }
+
+  @media (max-width:640px){
+    .stats-strip{ grid-template-columns:repeat(3,1fr); }
+    .stat:nth-child(3){ border-right:none; }
+    .stat:nth-child(4), .stat:nth-child(5){ border-top:1px solid var(--rule); }
+    .row2{ grid-template-columns:1fr; }
+    .toolbar{ flex-direction:column; align-items:stretch; }
+    .search-add{ flex-direction:column; }
+    input.search{ width:100%; }
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header class="hero">
+    <div class="eyebrow">Kişisel Okuma Günlüğü</div>
+    <h1 class="title">Kitap<em>lığım</em></h1>
+    <p class="subtitle">Okuduğum, okuyacağım ve okumakta olduğum kitapları burada topluyorum — puanlarla, notlarla ve altını çizdiğim satırlarla.</p>
+
+    <div class="stats-strip">
+      <div class="stat"><b id="statTotal">0</b><span>Toplam</span></div>
+      <div class="stat"><b id="statRead">0</b><span>Okudu</span></div>
+      <div class="stat"><b id="statReading">0</b><span>Okuyor</span></div>
+      <div class="stat"><b id="statYear">0</b><span id="statYearLabel">Bu Yıl</span></div>
+      <div class="stat"><b id="statAvg">–</b><span>Ort. Puan</span></div>
+    </div>
+  </header>
+
+  <section id="favSection" style="display:none;">
+    <div class="section-head"><h2>Favori Kitaplar</h2></div>
+    <div class="shelf" id="favShelf"></div>
+  </section>
+
+  <section id="readingSection" style="display:none;">
+    <div class="section-head"><h2>Şu An Okuduklarım</h2></div>
+    <div id="readingList" style="display:flex; flex-direction:column; gap:12px;"></div>
+  </section>
+
+  <section id="librarySection">
+    <div class="section-head"><h2>Kitaplarım</h2><span class="count" id="gridCount"></span></div>
+    <div class="toolbar">
+      <div class="tabs">
+        <button class="tab active" data-filter="all">Tümü</button>
+        <button class="tab" data-filter="toread">Okunacak</button>
+        <button class="tab" data-filter="reading">Okuyor</button>
+        <button class="tab" data-filter="read">Okundu</button>
+      </div>
+      <div class="search-add">
+        <input type="text" class="search" id="searchInput" placeholder="Ara: başlık, yazar...">
+        <button class="btn-primary" id="addBookBtn">+ Kitap Ekle</button>
+      </div>
+    </div>
+    <div class="grid" id="bookGrid"></div>
+    <div class="empty-state" id="emptyState" style="display:none;">
+      <div class="big">Raflar henüz boş.</div>
+      İlk kitabını ekleyerek günlüğüne başla.
+    </div>
+  </section>
+
+  <section id="histSection" style="display:none;">
+    <div class="hist-box">
+      <div class="hist-head"><h3>Puan Dağılımı</h3><b id="histCount">0</b></div>
+      <div class="hist-bars" id="histBars"></div>
+      <div class="hist-labels"><span>★</span><span>★★</span><span>★★★</span><span>★★★★</span><span>★★★★★</span></div>
+    </div>
+  </section>
+
+  <footer>kitaplığım · tarayıcında saklanır, kimseyle paylaşılmaz</footer>
+</div>
+
+<!-- Modal -->
+<div class="overlay" id="overlay">
+  <div class="modal">
+    <div class="modal-head">
+      <h3 id="modalTitle">Kitap Ekle</h3>
+      <button class="modal-close" id="closeModal">✕</button>
+    </div>
+    <div class="modal-body">
+      <div>
+        <label>Kitap Adı</label>
+        <input type="text" id="fTitle" placeholder="Örn. Oblomov">
+      </div>
+      <div class="row2">
+        <div>
+          <label>Yazar</label>
+          <input type="text" id="fAuthor" placeholder="Örn. İvan Gonçarov">
+        </div>
+        <div>
+          <label>Kapak Görseli (URL, opsiyonel)</label>
+          <input type="url" id="fCover" placeholder="https://...">
+        </div>
+      </div>
+      <div class="row2">
+        <div>
+          <label>Durum</label>
+          <select id="fStatus">
+            <option value="toread">Okunacak</option>
+            <option value="reading">Okuyor</option>
+            <option value="read">Okundu</option>
+          </select>
+        </div>
+        <div>
+          <label>Sayfa Sayısı (opsiyonel)</label>
+          <input type="number" id="fPages" min="0" placeholder="Örn. 320">
+        </div>
+      </div>
+      <div class="row2">
+        <div>
+          <label>Puan</label>
+          <div class="star-picker" id="starPicker">
+            <span data-v="1">★</span><span data-v="2">★</span><span data-v="3">★</span><span data-v="4">★</span><span data-v="5">★</span>
+          </div>
+        </div>
+        <div>
+          <label>Bitirme Tarihi (opsiyonel)</label>
+          <input type="date" id="fFinishDate">
+        </div>
+      </div>
+      <label class="fav-toggle"><input type="checkbox" id="fFav"> <span style="font-size:13.5px;">Favori kitaplarıma ekle</span></label>
+      <div>
+        <label>Notlarım</label>
+        <textarea id="fNotes" placeholder="Bu kitap hakkında düşüncelerin..."></textarea>
+      </div>
+      <div>
+        <label>Alıntılar</label>
+        <div class="quotes-list" id="quotesList"></div>
+        <div class="quote-add" style="margin-top:8px;">
+          <input type="text" id="quoteInput" placeholder="Beğendiğin bir satırı ekle...">
+          <button class="btn-ghost" id="addQuoteBtn">Ekle</button>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-danger" id="deleteBookBtn" style="display:none;">Kitabı Sil</button>
+        <div class="footer-right" style="margin-left:auto;">
+          <button class="btn-ghost" id="cancelBtn">Vazgeç</button>
+          <button class="btn-primary" id="saveBookBtn">Kaydet</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+  const STORAGE_KEY = "kitaplik-data-v1";
+  let books = [];
+  let currentFilter = "all";
+  let editingId = null;
+  let pendingQuotes = [];
+  let pendingRating = 0;
+
+  // ---------- storage ----------
+  function load(){
+    try{
+      const raw = localStorage.getItem(STORAGE_KEY);
+      books = raw ? JSON.parse(raw) : [];
+    }catch(e){ books = []; }
+  }
+  function save(){
+    try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(books)); }
+    catch(e){ console.error("Kaydedilemedi:", e); }
+  }
+
+  // ---------- helpers ----------
+  function uid(){ return "b" + Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
+
+  const SPINE_PALETTES = [
+    ["#5c3a2e","#3b241c"], ["#3f4a3a","#252c22"], ["#6b3f3f","#3f2323"],
+    ["#3a4a56","#22303a"], ["#5a4a2e","#332a19"], ["#4a3a56","#2c223a"],
+    ["#3a5647","#20332a"], ["#5c4a3a","#362a1c"]
+  ];
+  function hashStr(s){
+    let h = 0;
+    for(let i=0;i<s.length;i++){ h = (h*31 + s.charCodeAt(i)) >>> 0; }
+    return h;
+  }
+  function coverStyle(book){
+    if(book.cover && book.cover.trim()){
+      return `background-image:url('${book.cover.replace(/'/g,"%27")}')`;
+    }
+    const pal = SPINE_PALETTES[hashStr(book.title||"?") % SPINE_PALETTES.length];
+    return `background-image:linear-gradient(160deg, ${pal[0]}, ${pal[1]})`;
+  }
+  function coverInner(book){
+    if(book.cover && book.cover.trim()) return "";
+    return `<div class="fallback-author">${escapeHtml(book.author||"")}</div><div class="fallback-title">${escapeHtml(book.title||"İsimsiz")}</div>`;
+  }
+  function escapeHtml(s){
+    return String(s).replace(/[&<>"']/g, m => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
+  }
+  function statusLabel(s){ return {toread:"Okunacak", reading:"Okuyor", read:"Okundu"}[s] || s; }
+  function starsHtml(rating){
+    let out = "";
+    for(let i=1;i<=5;i++){ out += `<span class="${i<=rating?'':'off'}">★</span>`; }
+    return out;
+  }
+
+  // ---------- rendering ----------
+  function renderAll(){
+    renderStats();
+    renderFavorites();
+    renderReading();
+    renderGrid();
+    renderHistogram();
+  }
+
+  function renderStats(){
+    const total = books.length;
+    const read = books.filter(b=>b.status==="read").length;
+    const reading = books.filter(b=>b.status==="reading").length;
+    const thisYear = new Date().getFullYear();
+    const yearCount = books.filter(b=> b.status==="read" && b.finishDate && new Date(b.finishDate).getFullYear()===thisYear).length;
+    const rated = books.filter(b=>b.rating>0);
+    const avg = rated.length ? (rated.reduce((a,b)=>a+b.rating,0)/rated.length).toFixed(1) : "–";
+
+    document.getElementById("statTotal").textContent = total;
+    document.getElementById("statRead").textContent = read;
+    document.getElementById("statReading").textContent = reading;
+    document.getElementById("statYear").textContent = yearCount;
+    document.getElementById("statYearLabel").textContent = thisYear + " Yılı";
+    document.getElementById("statAvg").textContent = avg;
+  }
+
+  function renderFavorites(){
+    const favs = books.filter(b=>b.favorite);
+    const sec = document.getElementById("favSection");
+    const shelf = document.getElementById("favShelf");
+    if(!favs.length){ sec.style.display="none"; return; }
+    sec.style.display="block";
+    shelf.innerHTML = favs.map(b => `
+      <div class="spine" style="${coverStyle(b)}" onclick="KTP.openEdit('${b.id}')">
+        <div class="fav-badge">★</div>
+        ${coverInner(b)}
+      </div>
+    `).join("");
+  }
+
+  function renderReading(){
+    const cur = books.filter(b=>b.status==="reading");
+    const sec = document.getElementById("readingSection");
+    const list = document.getElementById("readingList");
+    if(!cur.length){ sec.style.display="none"; return; }
+    sec.style.display="block";
+    list.innerHTML = cur.map(b => `
+      <div class="reading-card" onclick="KTP.openEdit('${b.id}')">
+        <div class="cov" style="${coverStyle(b)}"></div>
+        <div class="info">
+          <b>${escapeHtml(b.title||"İsimsiz")}</b>
+          <div class="auth">${escapeHtml(b.author||"")}</div>
+          <span class="stamp reading">okunuyor</span>
+        </div>
+      </div>
+    `).join("");
+  }
+
+  function renderGrid(){
+    const q = document.getElementById("searchInput").value.trim().toLowerCase();
+    let list = books.filter(b => currentFilter==="all" || b.status===currentFilter);
+    if(q){ list = list.filter(b => (b.title||"").toLowerCase().includes(q) || (b.author||"").toLowerCase().includes(q)); }
+    // newest edited first-ish: keep insertion order but reverse for recency
+    list = list.slice().reverse();
+
+    const grid = document.getElementById("bookGrid");
+    const empty = document.getElementById("emptyState");
+    document.getElementById("gridCount").textContent = list.length ? `${list.length} kitap` : "";
+
+    if(!books.length){
+      grid.innerHTML = ""; empty.style.display="block";
+      empty.querySelector(".big").textContent = "Raflar henüz boş.";
+      empty.lastChild ? null : null;
+      return;
+    }
+    if(!list.length){
+      grid.innerHTML = ""; empty.style.display="block";
+      empty.querySelector(".big").textContent = "Bu filtrede kitap yok.";
+      return;
+    }
+    empty.style.display="none";
+    grid.innerHTML = list.map(b => `
+      <div class="book-card" onclick="KTP.openEdit('${b.id}')">
+        <div class="book-cover" style="${coverStyle(b)}">${coverInner(b)}</div>
+        <div class="book-meta">
+          <div class="t">${escapeHtml(b.title||"İsimsiz")}</div>
+          <div class="a"><span class="status-dot ${b.status}"></span>${escapeHtml(b.author||"Bilinmiyor")}</div>
+          ${b.rating ? `<div class="stars">${starsHtml(b.rating)}</div>` : `<div class="stars" style="color:var(--muted); font-family:'JetBrains Mono',monospace; font-size:10.5px; letter-spacing:.05em;">${statusLabel(b.status)}</div>`}
+        </div>
+      </div>
+    `).join("");
+  }
+
+  function renderHistogram(){
+    const rated = books.filter(b=>b.rating>0);
+    const sec = document.getElementById("histSection");
+    if(!rated.length){ sec.style.display="none"; return; }
+    sec.style.display="block";
+    const counts = [0,0,0,0,0];
+    rated.forEach(b => counts[b.rating-1]++);
+    const max = Math.max(...counts, 1);
+    document.getElementById("histCount").textContent = rated.length;
+    document.getElementById("histBars").innerHTML = counts.map(c => `
+      <div class="hist-col"><div class="hist-bar" style="height:${Math.max(4,(c/max)*100)}%;"></div></div>
+    `).join("");
+  }
+
+  // ---------- modal ----------
+  function resetForm(){
+    document.getElementById("fTitle").value = "";
+    document.getElementById("fAuthor").value = "";
+    document.getElementById("fCover").value = "";
+    document.getElementById("fStatus").value = "toread";
+    document.getElementById("fPages").value = "";
+    document.getElementById("fFinishDate").value = "";
+    document.getElementById("fFav").checked = false;
+    document.getElementById("fNotes").value = "";
+    pendingQuotes = [];
+    pendingRating = 0;
+    renderQuotes();
+    renderStars();
+  }
+
+  function openAdd(){
+    editingId = null;
+    resetForm();
+    document.getElementById("modalTitle").textContent = "Kitap Ekle";
+    document.getElementById("deleteBookBtn").style.display = "none";
+    document.getElementById("overlay").classList.add("open");
+    document.getElementById("fTitle").focus();
+  }
+
+  function openEdit(id){
+    const b = books.find(x=>x.id===id);
+    if(!b) return;
+    editingId = id;
+    document.getElementById("fTitle").value = b.title||"";
+    document.getElementById("fAuthor").value = b.author||"";
+    document.getElementById("fCover").value = b.cover||"";
+    document.getElementById("fStatus").value = b.status||"toread";
+    document.getElementById("fPages").value = b.pages||"";
+    document.getElementById("fFinishDate").value = b.finishDate||"";
+    document.getElementById("fFav").checked = !!b.favorite;
+    document.getElementById("fNotes").value = b.notes||"";
+    pendingQuotes = (b.quotes||[]).slice();
+    pendingRating = b.rating||0;
+    renderQuotes();
+    renderStars();
+    document.getElementById("modalTitle").textContent = "Kitabı Düzenle";
+    document.getElementById("deleteBookBtn").style.display = "inline-block";
+    document.getElementById("overlay").classList.add("open");
+  }
+
+  function closeModal(){
+    document.getElementById("overlay").classList.remove("open");
+  }
+
+  function renderStars(){
+    document.querySelectorAll("#starPicker span").forEach(el=>{
+      el.classList.toggle("filled", parseInt(el.dataset.v,10) <= pendingRating);
+    });
+  }
+
+  function renderQuotes(){
+    const el = document.getElementById("quotesList");
+    if(!pendingQuotes.length){ el.innerHTML = ""; return; }
+    el.innerHTML = pendingQuotes.map((q,i)=>`
+      <div class="quote-item">
+        <div class="qtext">"${escapeHtml(q)}"</div>
+        <button data-i="${i}" class="rm-quote">Sil</button>
+      </div>
+    `).join("");
+    el.querySelectorAll(".rm-quote").forEach(btn=>{
+      btn.addEventListener("click", ()=>{
+        pendingQuotes.splice(parseInt(btn.dataset.i,10),1);
+        renderQuotes();
+      });
+    });
+  }
+
+  function saveBook(){
+    const title = document.getElementById("fTitle").value.trim();
+    if(!title){ document.getElementById("fTitle").focus(); return; }
+    const data = {
+      title,
+      author: document.getElementById("fAuthor").value.trim(),
+      cover: document.getElementById("fCover").value.trim(),
+      status: document.getElementById("fStatus").value,
+      pages: document.getElementById("fPages").value ? parseInt(document.getElementById("fPages").value,10) : null,
+      finishDate: document.getElementById("fFinishDate").value || null,
+      favorite: document.getElementById("fFav").checked,
+      notes: document.getElementById("fNotes").value.trim(),
+      quotes: pendingQuotes.slice(),
+      rating: pendingRating
+    };
+    if(editingId){
+      const idx = books.findIndex(b=>b.id===editingId);
+      if(idx>-1) books[idx] = {...books[idx], ...data};
+    } else {
+      books.push({ id: uid(), ...data });
+    }
+    save();
+    renderAll();
+    closeModal();
+  }
+
+  function deleteBook(){
+    if(!editingId) return;
+    if(!confirm("Bu kitabı silmek istediğine emin misin?")) return;
+    books = books.filter(b=>b.id!==editingId);
+    save();
+    renderAll();
+    closeModal();
+  }
+
+  // ---------- events ----------
+  document.getElementById("addBookBtn").addEventListener("click", openAdd);
+  document.getElementById("closeModal").addEventListener("click", closeModal);
+  document.getElementById("cancelBtn").addEventListener("click", closeModal);
+  document.getElementById("overlay").addEventListener("click", e=>{ if(e.target.id==="overlay") closeModal(); });
+  document.getElementById("saveBookBtn").addEventListener("click", saveBook);
+  document.getElementById("deleteBookBtn").addEventListener("click", deleteBook);
+  document.getElementById("searchInput").addEventListener("input", renderGrid);
+
+  document.querySelectorAll(".tab").forEach(tab=>{
+    tab.addEventListener("click", ()=>{
+      document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));
+      tab.classList.add("active");
+      currentFilter = tab.dataset.filter;
+      renderGrid();
+    });
+  });
+
+  document.querySelectorAll("#starPicker span").forEach(el=>{
+    el.addEventListener("click", ()=>{
+      const v = parseInt(el.dataset.v,10);
+      pendingRating = (pendingRating === v) ? 0 : v;
+      renderStars();
+    });
+  });
+
+  document.getElementById("addQuoteBtn").addEventListener("click", ()=>{
+    const inp = document.getElementById("quoteInput");
+    const val = inp.value.trim();
+    if(!val) return;
+    pendingQuotes.push(val);
+    inp.value = "";
+    renderQuotes();
+  });
+  document.getElementById("quoteInput").addEventListener("keydown", e=>{
+    if(e.key==="Enter"){ e.preventDefault(); document.getElementById("addQuoteBtn").click(); }
+  });
+
+  document.addEventListener("keydown", e=>{
+    if(e.key==="Escape") closeModal();
+  });
+
+  // expose for inline onclick handlers
+  window.KTP = { openEdit };
+
+  // ---------- init ----------
+  load();
+  renderAll();
+})();
+</script>
+</body>
+</html>
